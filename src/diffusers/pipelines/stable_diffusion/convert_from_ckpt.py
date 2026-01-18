@@ -324,7 +324,7 @@ def create_unet_diffusers_config(original_config, image_size: int, controlnet=Fa
     if "disable_self_attentions" in unet_params:
         config["only_cross_attention"] = unet_params.disable_self_attentions
 
-    if "num_classes" in unet_params and type(unet_params.num_classes) == int:
+    if "num_classes" in unet_params and isinstance(unet_params.num_classes, int):
         config["num_class_embeds"] = unet_params.num_classes
 
     if controlnet:
@@ -1145,6 +1145,7 @@ def download_from_original_stable_diffusion_ckpt(
     stable_unclip_prior: Optional[str] = None,
     clip_stats_path: Optional[str] = None,
     controlnet: Optional[bool] = None,
+    adapter: Optional[bool] = None,
     load_safety_checker: bool = True,
     pipeline_class: DiffusionPipeline = None,
     local_files_only=False,
@@ -1720,6 +1721,18 @@ def download_from_original_stable_diffusion_ckpt(
                     tokenizer_2=tokenizer_2,
                     unet=unet,
                     controlnet=controlnet,
+                    scheduler=scheduler,
+                    force_zeros_for_empty_prompt=True,
+                )
+            elif adapter:
+                pipe = pipeline_class(
+                    vae=vae,
+                    text_encoder=text_encoder,
+                    tokenizer=tokenizer,
+                    text_encoder_2=text_encoder_2,
+                    tokenizer_2=tokenizer_2,
+                    unet=unet,
+                    adapter=adapter,
                     scheduler=scheduler,
                     force_zeros_for_empty_prompt=True,
                 )

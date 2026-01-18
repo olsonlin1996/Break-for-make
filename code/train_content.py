@@ -518,7 +518,6 @@ def parse_args(input_args=None):
 
     return args
 
-
 class DreamBoothDataset(Dataset):
     """
     A dataset to prepare the instance and class images with the prompts for fine-tuning the model.
@@ -1342,8 +1341,8 @@ def main(args):
         disable=not accelerator.is_local_main_process,
     )
 
-    # for epoch in range(first_epoch, args.num_train_epochs):
-    for epoch in range(first_epoch, 9000):
+    for epoch in range(first_epoch, args.num_train_epochs):
+    # for epoch in range(first_epoch, 9000):
         print(epoch)
         unet.train()
         if args.train_text_encoder:
@@ -1560,8 +1559,8 @@ def main(args):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
-            # if global_step >= args.max_train_steps:
-            if global_step >= 9000:
+            if global_step >= args.max_train_steps:
+            # if global_step >= 9000:
                 break
 
         if accelerator.is_main_process:

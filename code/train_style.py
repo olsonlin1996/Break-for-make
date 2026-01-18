@@ -1055,21 +1055,47 @@ def main(args):
     #     eps=args.adam_epsilon,
     # )
 
-    optimizer = optimizer_class(
-        unet_lora_parameters, 
-        lr=args.learning_rate,
-        betas=(args.adam_beta1, args.adam_beta2),
-        weight_decay=args.adam_weight_decay,
-        eps=args.adam_epsilon,
-    )
+    if args.train_text_encoder:
+        # IMPORTANT: include TE LoRA params, otherwise --train_text_encoder becomes a no-op.
+        optimizer = optimizer_class(
+            params_to_optimize,
+            lr=args.learning_rate,
+            betas=(args.adam_beta1, args.adam_beta2),
+            weight_decay=args.adam_weight_decay,
+            eps=args.adam_epsilon,
+        )
+        optimizer_2 = None
+    else:
+        optimizer = optimizer_class(
+            unet_lora_parameters,
+            lr=args.learning_rate,
+            betas=(args.adam_beta1, args.adam_beta2),
+            weight_decay=args.adam_weight_decay,
+            eps=args.adam_epsilon,
+        )
+        optimizer_2 = optimizer_class(
+            unet_lora_parameters_2,
+            lr=args.learning_rate_2,
+            betas=(args.adam_beta1, args.adam_beta2),
+            weight_decay=args.adam_weight_decay,
+            eps=args.adam_epsilon,
+        )
 
-    optimizer_2 = optimizer_class(
-        unet_lora_parameters_2, 
-        lr=args.learning_rate_2,
-        betas=(args.adam_beta1, args.adam_beta2),
-        weight_decay=args.adam_weight_decay,
-        eps=args.adam_epsilon,
-    )
+#    optimizer = optimizer_class(
+#        unet_lora_parameters, 
+#        lr=args.learning_rate,
+#        betas=(args.adam_beta1, args.adam_beta2),
+#        weight_decay=args.adam_weight_decay,
+#        eps=args.adam_epsilon,
+#    )
+
+#    optimizer_2 = optimizer_class(
+#        unet_lora_parameters_2, 
+#        lr=args.learning_rate_2,
+#        betas=(args.adam_beta1, args.adam_beta2),
+#        weight_decay=args.adam_weight_decay,
+#        eps=args.adam_epsilon,
+#    )
 
     # Computes additional embeddings/ids required by the SDXL UNet.
     # regular text emebddings (when `train_text_encoder` is not True)
@@ -1116,6 +1142,12 @@ def main(args):
         else:
             instance_prompt_hidden_states_2, instance_pooled_prompt_embeds_2 = compute_text_embeddings(
                 args.instance_prompt_2, text_encoders, tokenizers
+            )
+            instance_prompt_hidden_states_3, instance_pooled_prompt_embeds_3 = compute_text_embeddings(
+                args.instance_prompt_3, text_encoders, tokenizers
+            )
+            instance_prompt_hidden_states_4, instance_pooled_prompt_embeds_4 = compute_text_embeddings(
+                args.instance_prompt_4, text_encoders, tokenizers
             )
 
     # Handle class prompt for prior-preservation.
@@ -1213,26 +1245,26 @@ def main(args):
     )
     if args.multi_style:
         train_dataloader_2 = torch.utils.data.DataLoader(
-        train_dataset_2,
-        batch_size=args.train_batch_size,
-        shuffle=True,
-        collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
-        num_workers=args.dataloader_num_workers,
-    )
+            train_dataset_2,
+            batch_size=args.train_batch_size,
+            shuffle=True,
+            collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
+            num_workers=args.dataloader_num_workers,
+        )
         train_dataloader_3 = torch.utils.data.DataLoader(
-        train_dataset_3,
-        batch_size=args.train_batch_size,
-        shuffle=True,
-        collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
-        num_workers=args.dataloader_num_workers,
-    )
+            train_dataset_3,
+            batch_size=args.train_batch_size,
+            shuffle=True,
+            collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
+            num_workers=args.dataloader_num_workers,
+        )
         train_dataloader_4 = torch.utils.data.DataLoader(
-        train_dataset_4,
-        batch_size=args.train_batch_size,
-        shuffle=True,
-        collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
-        num_workers=args.dataloader_num_workers,
-    )
+            train_dataset_4,
+            batch_size=args.train_batch_size,
+            shuffle=True,
+            collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
+            num_workers=args.dataloader_num_workers,
+        )
     else:
         train_dataloader_2 = torch.utils.data.DataLoader(
             train_dataset_2,
@@ -1257,14 +1289,16 @@ def main(args):
         num_cycles=args.lr_num_cycles,
         power=args.lr_power,
     )
-    lr_scheduler_2 = get_scheduler(
-        args.lr_scheduler,
-        optimizer=optimizer_2,
-        num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
-        num_training_steps=args.max_train_steps * accelerator.num_processes,
-        num_cycles=args.lr_num_cycles,
-        power=args.lr_power,
-    )
+    lr_scheduler_2 = None
+    if optimizer_2 is not None:
+        lr_scheduler_2 = get_scheduler(
+            args.lr_scheduler,
+            optimizer=optimizer_2,
+            num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
+            num_training_steps=args.max_train_steps * accelerator.num_processes,
+            num_cycles=args.lr_num_cycles,
+            power=args.lr_power,
+        )
 
     # Prepare everything with our `accelerator`.
     if args.train_text_encoder:
@@ -1347,14 +1381,33 @@ def main(args):
         disable=not accelerator.is_local_main_process,
     )
 
-    # for epoch in range(first_epoch, args.num_train_epochs):
-    for epoch in range(first_epoch, 1500):
+    for epoch in range(first_epoch, args.num_train_epochs):
+#    for epoch in range(first_epoch, 1500):
         unet.train()
         if args.train_text_encoder:
             text_encoder_one.train()
             text_encoder_two.train()
-        for step, (batch, batch_2, batch_3, batch_4) in enumerate(zip(train_dataloader, train_dataloader_2, train_dataloader_3, train_dataloader_4)):
+        # for step, (batch, batch_2, batch_3, batch_4) in enumerate(zip(train_dataloader, train_dataloader_2, train_dataloader_3, train_dataloader_4)):
         # for step, batch in enumerate(train_dataloader, train_dataloader_2):
+        if args.train_text_encoder:
+            loader_iter = enumerate(train_dataloader)
+        else:
+            if args.multi_style:
+                loader_iter = enumerate(zip(train_dataloader, train_dataloader_2, train_dataloader_3, train_dataloader_4))
+            else:
+                loader_iter = enumerate(zip(train_dataloader, train_dataloader_2))
+
+        for step, batches in loader_iter:
+            if args.train_text_encoder:
+                batch = batches
+                batch_2 = batch_3 = batch_4 = None
+            else:
+                if args.multi_style:
+                    batch, batch_2, batch_3, batch_4 = batches
+                else:
+                    batch, batch_2 = batches
+                    batch_3 = batch_4 = None
+
             with accelerator.accumulate(unet):
                 pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
 
@@ -1428,9 +1481,14 @@ def main(args):
 
                     # Add the prior loss to the instance loss.
                     loss = loss + args.prior_loss_weight * prior_loss
+                    loss_1 = loss
+
                 else:
                     loss_1 = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
-                accelerator.backward(loss_1, retain_graph=True)
+
+                # accelerator.backward(loss_1, retain_graph=True)
+                accelerator.backward(loss_1)
+
                 if accelerator.sync_gradients:
                     params_to_clip = (
                         itertools.chain(unet_lora_parameters, text_lora_parameters_one, text_lora_parameters_two)
@@ -1442,22 +1500,30 @@ def main(args):
                 lr_scheduler.step()
                 optimizer.zero_grad()
 
+                # If optimizer_2 is disabled (e.g., train_text_encoder=True), skip the second branch entirely.
+                if optimizer_2 is None:
+                    continue
+
                 pixel_values_2 = batch_2["pixel_values"].to(dtype=vae.dtype)
                 model_input_2 = vae.encode(pixel_values_2).latent_dist.sample()
                 model_input_2 = model_input_2 * vae.config.scaling_factor
-                pixel_values_3 = batch_3["pixel_values"].to(dtype=vae.dtype)
-                model_input_3 = vae.encode(pixel_values_3).latent_dist.sample()
-                model_input_3 = model_input_3 * vae.config.scaling_factor
-                pixel_values_4 = batch_4["pixel_values"].to(dtype=vae.dtype)
-                model_input_4 = vae.encode(pixel_values_4).latent_dist.sample()
-                model_input_4 = model_input_4 * vae.config.scaling_factor
+                if args.multi_style:
+                    pixel_values_3 = batch_3["pixel_values"].to(dtype=vae.dtype)
+                    model_input_3 = vae.encode(pixel_values_3).latent_dist.sample()
+                    model_input_3 = model_input_3 * vae.config.scaling_factor
+                    pixel_values_4 = batch_4["pixel_values"].to(dtype=vae.dtype)
+                    model_input_4 = vae.encode(pixel_values_4).latent_dist.sample()
+                    model_input_4 = model_input_4 * vae.config.scaling_factor
                 if args.pretrained_vae_model_name_or_path is None:
                     model_input_2 = model_input_2.to(weight_dtype)
-
+                    if args.multi_style:
+                        model_input_3 = model_input_3.to(weight_dtype)
+                        model_input_4 = model_input_4.to(weight_dtype)
                 
                 noisy_model_input_2 = noise_scheduler.add_noise(model_input_2, noise, timesteps)
-                noisy_model_input_3 = noise_scheduler.add_noise(model_input_3, noise, timesteps)
-                noisy_model_input_4 = noise_scheduler.add_noise(model_input_4, noise, timesteps)
+                if args.multi_style:
+                    noisy_model_input_3 = noise_scheduler.add_noise(model_input_3, noise, timesteps)
+                    noisy_model_input_4 = noise_scheduler.add_noise(model_input_4, noise, timesteps)
 
                 elems_to_repeat_2 = bsz // 2 if args.with_prior_preservation else bsz
                 
@@ -1515,19 +1581,26 @@ def main(args):
                     loss_2 = (F.mse_loss(model_pred_2.float(), target.float(), reduction="mean")+F.mse_loss(model_pred_3.float(), target.float(), reduction="mean")+F.mse_loss(model_pred_4.float(), target.float(), reduction="mean"))/3
                 else:
                     loss_2 = F.mse_loss(model_pred_2.float(), target.float(), reduction="mean")
+                
                 accelerator.backward(loss_2)
+                
                 if accelerator.sync_gradients:
-                    params_to_clip = (
-                        itertools.chain(unet_lora_parameters, text_lora_parameters_one, text_lora_parameters_two)
-                        if args.train_text_encoder
-                        else unet_lora_parameters_2
-                    )
-                    accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
+                    # params_to_clip = (
+                    #     itertools.chain(unet_lora_parameters, text_lora_parameters_one, text_lora_parameters_two)
+                    #     if args.train_text_encoder
+                    #     else unet_lora_parameters_2
+                    # )
+                    # accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
+
+                    # 只 clip optimizer_2 真的在更新的參數（down）
+                    params_to_clip_2 = unet_lora_parameters_2
+                    accelerator.clip_grad_norm_(params_to_clip_2, args.max_grad_norm)
                 
 
-                optimizer_2.step()
-                lr_scheduler_2.step()
-                optimizer_2.zero_grad()
+                if optimizer_2 is not None:
+                    optimizer_2.step()
+                    lr_scheduler_2.step()
+                    optimizer_2.zero_grad()
 
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:

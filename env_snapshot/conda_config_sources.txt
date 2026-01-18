@@ -1,0 +1,4 @@
+==> /home/cglab/miniconda3/.condarc <==
+channels:
+  - defaults
+

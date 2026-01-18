@@ -1,0 +1,16 @@
+/home/cglab/miniconda3/envs/b4m/lib/python3.11/site-packages/transformers/utils/generic.py:311: FutureWarning: `torch.utils._pytree._register_pytree_node` is deprecated. Please use `torch.utils._pytree.register_pytree_node` instead.
+  torch.utils._pytree._register_pytree_node(
+
+sys.executable: /home/cglab/miniconda3/envs/b4m/bin/python
+python: 3.11.14 (main, Oct 21 2025, 18:31:21) [GCC 11.2.0]
+torch: 2.9.1+cu128
+cuda available: True
+torch.version.cuda: 12.8
+gpu: NVIDIA GeForce RTX 5090
+cap: (12, 0)
+diffusers: import failed: No module named 'diffusers'
+transformers: 4.33.3 (/home/cglab/miniconda3/envs/b4m/lib/python3.11/site-packages/transformers/__init__.py)
+accelerate: 0.24.1 (/home/cglab/miniconda3/envs/b4m/lib/python3.11/site-packages/accelerate/__init__.py)
+peft: 0.6.2 (/home/cglab/miniconda3/envs/b4m/lib/python3.11/site-packages/peft/__init__.py)
+huggingface_hub: 0.19.4 (/home/cglab/miniconda3/envs/b4m/lib/python3.11/site-packages/huggingface_hub/__init__.py)
+

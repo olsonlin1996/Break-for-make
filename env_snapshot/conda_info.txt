@@ -1,0 +1,76 @@
+
+     active environment : base
+    active env location : /home/cglab/miniconda3
+            shell level : 1
+       user config file : /home/cglab/.condarc
+ populated config files : /home/cglab/miniconda3/.condarc
+          conda version : 25.5.1
+    conda-build version : not installed
+         python version : 3.13.5.final.0
+                 solver : libmamba (default)
+       virtual packages : __archspec=1=zen4
+                          __conda=25.5.1=0
+                          __cuda=13.0=0
+                          __glibc=2.39=0
+                          __linux=6.8.0=0
+                          __unix=0=0
+       base environment : /home/cglab/miniconda3  (writable)
+      conda av data dir : /home/cglab/miniconda3/etc/conda
+  conda av metadata url : None
+           channel URLs : https://repo.anaconda.com/pkgs/main/linux-64
+                          https://repo.anaconda.com/pkgs/main/noarch
+                          https://repo.anaconda.com/pkgs/r/linux-64
+                          https://repo.anaconda.com/pkgs/r/noarch
+          package cache : /home/cglab/miniconda3/pkgs
+                          /home/cglab/.conda/pkgs
+       envs directories : /home/cglab/miniconda3/envs
+                          /home/cglab/.conda/envs
+               platform : linux-64
+             user-agent : conda/25.5.1 requests/2.32.4 CPython/3.13.5 Linux/6.8.0-90-generic ubuntu/24.04.3 glibc/2.39 solver/libmamba conda-libmamba-solver/25.4.0 libmambapy/2.0.5 aau/0.7.1 c/. s/. e/.
+                UID:GID : 1000:1000
+             netrc file : /home/cglab/.netrc
+           offline mode : False
+
+
+# conda environments:
+#
+base                 * /home/cglab/miniconda3
+ComfuZI                /home/cglab/miniconda3/envs/ComfuZI
+b4m                    /home/cglab/miniconda3/envs/b4m
+b4m_runA               /home/cglab/miniconda3/envs/b4m_runA
+b4m_runB               /home/cglab/miniconda3/envs/b4m_runB
+b4mtest                /home/cglab/miniconda3/envs/b4mtest
+d4mtest                /home/cglab/miniconda3/envs/d4mtest
+das                    /home/cglab/miniconda3/envs/das
+dl_hw                  /home/cglab/miniconda3/envs/dl_hw
+flod128                /home/cglab/miniconda3/envs/flod128
+flodenv                /home/cglab/miniconda3/envs/flodenv
+lix_f1                 /home/cglab/miniconda3/envs/lix_f1
+lixiangHCI             /home/cglab/miniconda3/envs/lixiangHCI
+sam2_env               /home/cglab/miniconda3/envs/sam2_env
+sf3d_env               /home/cglab/miniconda3/envs/sf3d_env
+uuuu_wsm               /home/cglab/miniconda3/envs/uuuu_wsm
+wsm_final              /home/cglab/miniconda3/envs/wsm_final
+
+sys.version: 3.13.5 | packaged by Anaconda, Inc. | (m...
+sys.prefix: /home/cglab/miniconda3
+sys.executable: /home/cglab/miniconda3/bin/python
+conda location: /home/cglab/miniconda3/lib/python3.13/site-packages/conda
+conda-build: None
+conda-content-trust: /home/cglab/miniconda3/bin/conda-content-trust
+conda-env: /home/cglab/miniconda3/bin/conda-env
+user site dirs:
+
+CIO_TEST: <not set>
+CONDA_DEFAULT_ENV: base
+CONDA_EXE: /home/cglab/miniconda3/bin/conda
+CONDA_PREFIX: /home/cglab/miniconda3
+CONDA_PROMPT_MODIFIER: (base) 
+CONDA_PYTHON_EXE: /home/cglab/miniconda3/bin/python
+CONDA_ROOT: /home/cglab/miniconda3
+CONDA_SHLVL: 1
+CURL_CA_BUNDLE: <not set>
+LD_PRELOAD: <not set>
+PATH: /home/cglab/miniconda3/bin:/home/cglab/miniconda3/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+REQUESTS_CA_BUNDLE: <not set>
+SSL_CERT_FILE: <not set>
