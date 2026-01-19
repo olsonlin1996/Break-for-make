@@ -36,8 +36,9 @@ while true; do
 
   RESUME_ARGS=()
   if compgen -G "${OUT_DIR}/checkpoint-*" > /dev/null; then
-    echo "[${ts}] [resume] found checkpoints, resume_from_checkpoint=latest" | tee -a "${log_file}"
-    RESUME_ARGS+=(--resume_from_checkpoint="latest")
+    latest_ckpt="$(ls -1d "${OUT_DIR}"/checkpoint-* 2>/dev/null | sort -V | tail -n 1)"
+    echo "[${ts}] [resume] found checkpoints, resume_from_checkpoint=${latest_ckpt}" | tee -a "${log_file}"
+    RESUME_ARGS+=(--resume_from_checkpoint="${latest_ckpt}")
   else
     echo "[${ts}] [resume] no checkpoint found, start fresh" | tee -a "${log_file}"
   fi
