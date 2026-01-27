@@ -21,15 +21,22 @@ export PYTHONPATH="${B4M_ROOT}/src:${PYTHONPATH:-}"
 # -------------------------
 # Mode A（先跑起來驗證）超參數：沿用你目前可跑通設定
 # -------------------------
-RESOLUTION=256
+# Paper-aligned override: LR=1e-4, BS=1, rank=64; RESOLUTION=512, grad_acc=4, max_steps=1000
+
+# RESOLUTION=256
+RESOLUTION=512
 RANK=64
 TRAIN_BS=1
-GRAD_ACC=1
+# GRAD_ACC=1
+GRAD_ACC=4
 LR=1e-4
-LR2=1e-5
-MAX_STEPS=50
+# LR2=1e-5
+LR2=1e-4
+# MAX_STEPS=50
+MAX_STEPS=1000
 SEED=0
-CKPT_STEPS=10
+# CKPT_STEPS=10
+CKPT_STEPS=100
 REPORT_TO="tensorboard"
 
 # -------------------------
@@ -88,9 +95,9 @@ update_latest_symlink () {
 
   local link_path
   if [[ "${lora_path}" == *.safetensors ]]; then
-    link_path="${B4M_ROOT}/outputs/latest_content_${name}.safetensors"
+    link_path="/mnt/cglab/olson/Break-for-make-outputs/latest_content_${name}.safetensors"
   else
-    link_path="${B4M_ROOT}/outputs/latest_content_${name}.bin"
+    link_path="/mnt/cglab/olson/Break-for-make-outputs/latest_content_${name}.bin"
   fi
 
   ln -sfn "${lora_path}" "${link_path}"
@@ -109,7 +116,7 @@ run_one_content () {
 
   check_dir_images_only "${content_dir}"
 
-  local out_dir="${B4M_ROOT}/outputs/content_${content_name}_run_$(date +%Y%m%d_%H%M%S)"
+  local out_dir="/mnt/cglab/olson/Break-for-make-outputs/content_${content_name}_run_$(date +%Y%m%d_%H%M%S)"
   mkdir -p "${out_dir}"
 
   echo "================================================="
@@ -160,10 +167,4 @@ run_one_content "elephant" "${CONTENT_ROOT}/elephant" "a photo of snp elephant"
 
 echo "All content trainings done."
 echo "Latest symlinks:"
-ls -lah "${B4M_ROOT}/outputs"/latest_content_* 2>/dev/null || true
-
-# 原本設定（要跑正式效果時再切回）
-#   RESOLUTION=512
-#   GRAD_ACC=4
-#   MAX_STEPS=1000
-#   CKPT_STEPS=100
+ls -lah "/mnt/cglab/olson/Break-for-make-outputs"/latest_content_* 2>/dev/null || true

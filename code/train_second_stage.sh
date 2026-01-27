@@ -47,21 +47,26 @@ STYLE3_PROMPT="w@z yarn art style, knitted or crochet texture, wool fibers, hand
 # =========================
 # 3) 輸出資料夾
 # =========================
-OUT_ROOT="${B4M_ROOT}/outputs/second_stage_run_$(date +%Y%m%d_%H%M%S)"
+OUT_ROOT="/mnt/cglab/olson/Break-for-make-outputs/second_stage_run_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "${OUT_ROOT}"
 
 # =========================
 # 4) 超參數（模式 A：先跑起來驗證）
 # =========================
-RESOLUTION=256
+# Paper-aligned override: LR=1e-4, BS=1, rank=64; RESOLUTION=512, grad_acc=4; max_steps kept at 50 (~few dozen)
+
+# RESOLUTION=256
+RESOLUTION=512
 RANK=64
 TRAIN_BS=1
-GRAD_ACC=1
+# GRAD_ACC=1
+GRAD_ACC=4
 LR=1e-4
 LR2=1e-4
 MAX_STEPS=50
 SEED=0
-CKPT_STEPS=10
+# CKPT_STEPS=10
+CKPT_STEPS=50
 REPORT_TO="tensorboard"
 
 NUM_VAL=2
@@ -136,27 +141,27 @@ resolve_symlink_file () {
 # 6) 優先使用 symlink：latest_style_run / latest_style_* / latest_content_*
 # =========================
 STYLE_RUN_DIR=""
-if [[ -L "${B4M_ROOT}/outputs/latest_style_run" || -d "${B4M_ROOT}/outputs/latest_style_run" ]]; then
-  STYLE_RUN_DIR="$(cd "${B4M_ROOT}/outputs/latest_style_run" && pwd)"
+if [[ -L "/mnt/cglab/olson/Break-for-make-outputs/latest_style_run" || -d "/mnt/cglab/olson/Break-for-make-outputs/latest_style_run" ]]; then
+  STYLE_RUN_DIR="$(cd "/mnt/cglab/olson/Break-for-make-outputs/latest_style_run" && pwd)"
 else
-  STYLE_RUN_DIR="$(latest_dir_maybe "${B4M_ROOT}/outputs/style_run_*")"
+  STYLE_RUN_DIR="$(latest_dir_maybe "/mnt/cglab/olson/Break-for-make-outputs/style_run_*")"
 fi
 if [[ -z "${STYLE_RUN_DIR}" ]]; then
   echo "ERROR: Cannot resolve STYLE_RUN_DIR (no latest_style_run and no style_run_*)."
   exit 1
 fi
 
-STYLE1_LORA_PATH="$(resolve_symlink_file "${B4M_ROOT}/outputs/latest_style_${STYLE1_NAME}.safetensors" "${B4M_ROOT}/outputs/latest_style_${STYLE1_NAME}.bin" || true)"
-STYLE2_LORA_PATH="$(resolve_symlink_file "${B4M_ROOT}/outputs/latest_style_${STYLE2_NAME}.safetensors" "${B4M_ROOT}/outputs/latest_style_${STYLE2_NAME}.bin" || true)"
-STYLE3_LORA_PATH="$(resolve_symlink_file "${B4M_ROOT}/outputs/latest_style_${STYLE3_NAME}.safetensors" "${B4M_ROOT}/outputs/latest_style_${STYLE3_NAME}.bin" || true)"
+STYLE1_LORA_PATH="$(resolve_symlink_file "/mnt/cglab/olson/Break-for-make-outputs/latest_style_${STYLE1_NAME}.safetensors" "/mnt/cglab/olson/Break-for-make-outputs/latest_style_${STYLE1_NAME}.bin" || true)"
+STYLE2_LORA_PATH="$(resolve_symlink_file "/mnt/cglab/olson/Break-for-make-outputs/latest_style_${STYLE2_NAME}.safetensors" "/mnt/cglab/olson/Break-for-make-outputs/latest_style_${STYLE2_NAME}.bin" || true)"
+STYLE3_LORA_PATH="$(resolve_symlink_file "/mnt/cglab/olson/Break-for-make-outputs/latest_style_${STYLE3_NAME}.safetensors" "/mnt/cglab/olson/Break-for-make-outputs/latest_style_${STYLE3_NAME}.bin" || true)"
 
 if [[ -z "${STYLE1_LORA_PATH}" ]]; then STYLE1_LORA_PATH="$(pick_lora_file_in_dir "${STYLE_RUN_DIR}/${STYLE1_NAME}")"; fi
 if [[ -z "${STYLE2_LORA_PATH}" ]]; then STYLE2_LORA_PATH="$(pick_lora_file_in_dir "${STYLE_RUN_DIR}/${STYLE2_NAME}")"; fi
 if [[ -z "${STYLE3_LORA_PATH}" ]]; then STYLE3_LORA_PATH="$(pick_lora_file_in_dir "${STYLE_RUN_DIR}/${STYLE3_NAME}")"; fi
 
-CONTENT1_LORA_PATH="$(resolve_symlink_file "${B4M_ROOT}/outputs/latest_content_${CONTENT1_NAME}.safetensors" "${B4M_ROOT}/outputs/latest_content_${CONTENT1_NAME}.bin" || true)"
-CONTENT2_LORA_PATH="$(resolve_symlink_file "${B4M_ROOT}/outputs/latest_content_${CONTENT2_NAME}.safetensors" "${B4M_ROOT}/outputs/latest_content_${CONTENT2_NAME}.bin" || true)"
-CONTENT3_LORA_PATH="$(resolve_symlink_file "${B4M_ROOT}/outputs/latest_content_${CONTENT3_NAME}.safetensors" "${B4M_ROOT}/outputs/latest_content_${CONTENT3_NAME}.bin" || true)"
+CONTENT1_LORA_PATH="$(resolve_symlink_file "/mnt/cglab/olson/Break-for-make-outputs/latest_content_${CONTENT1_NAME}.safetensors" "/mnt/cglab/olson/Break-for-make-outputs/latest_content_${CONTENT1_NAME}.bin" || true)"
+CONTENT2_LORA_PATH="$(resolve_symlink_file "/mnt/cglab/olson/Break-for-make-outputs/latest_content_${CONTENT2_NAME}.safetensors" "/mnt/cglab/olson/Break-for-make-outputs/latest_content_${CONTENT2_NAME}.bin" || true)"
+CONTENT3_LORA_PATH="$(resolve_symlink_file "/mnt/cglab/olson/Break-for-make-outputs/latest_content_${CONTENT3_NAME}.safetensors" "/mnt/cglab/olson/Break-for-make-outputs/latest_content_${CONTENT3_NAME}.bin" || true)"
 
 if [[ -z "${CONTENT1_LORA_PATH}" || -z "${CONTENT2_LORA_PATH}" || -z "${CONTENT3_LORA_PATH}" ]]; then
   echo "ERROR: Missing latest_content_<name> symlinks/files."
@@ -234,12 +239,14 @@ run_one_pair () {
     --lr_scheduler="constant" \
     --lr_warmup_steps=0 \
     --max_train_steps="${MAX_STEPS}" \
-    --mixed_precision=bf16 \
+    --mixed_precision=fp16 \
     --seed="${SEED}" \
     --checkpointing_steps="${CKPT_STEPS}" \
     --exchange_finetune \
     --lora_path_obj="${content_lora}" \
     --lora_path_style="${style_lora}"
+
+    # --mixed_precision=bf16
 }
 
 run_one_pair "${STYLE1_NAME}" "${STYLE1_DIR}" "${STYLE1_PROMPT}" "${STYLE1_LORA_PATH}" "${CONTENT1_NAME}" "${CONTENT1_DIR}" "${CONTENT1_PROMPT}" "${CONTENT1_LORA_PATH}"

@@ -43,21 +43,28 @@ STYLE3_PROMPT="w@z yarn art style, knitted or crochet texture, wool fibers, hand
 # =========================
 # 輸出根目錄（整批 style 的 run）
 # =========================
-OUT_ROOT="${B4M_ROOT}/outputs/style_run_$(date +%Y%m%d_%H%M%S)"
+OUT_ROOT="/mnt/cglab/olson/Break-for-make-outputs/style_run_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "${OUT_ROOT}"
 
 # =========================
 # 超參數（模式 A：先跑起來驗證）
 # =========================
-RESOLUTION=256
+# Paper-aligned override: LR=1e-4, BS=1, rank=64; RESOLUTION=512, grad_acc=4, max_steps=1000
+
+# RESOLUTION=256
+RESOLUTION=512
 RANK=64
 TRAIN_BS=1
-GRAD_ACC=1
+# GRAD_ACC=1
+GRAD_ACC=4
 LR=1e-4
-LR2=1e-5
-MAX_STEPS=50
+# LR2=1e-5
+LR2=1e-4
+# MAX_STEPS=50
+MAX_STEPS=1000
 SEED=0
-CKPT_STEPS=10
+# CKPT_STEPS=10
+CKPT_STEPS=100
 REPORT_TO="tensorboard"
 
 # =========================
@@ -113,9 +120,9 @@ update_latest_style_symlink () {
 
   local link_path
   if [[ "${lora_path}" == *.safetensors ]]; then
-    link_path="${B4M_ROOT}/outputs/latest_style_${style_name}.safetensors"
+    link_path="/mnt/cglab/olson/Break-for-make-outputs/latest_style_${style_name}.safetensors"
   else
-    link_path="${B4M_ROOT}/outputs/latest_style_${style_name}.bin"
+    link_path="/mnt/cglab/olson/Break-for-make-outputs/latest_style_${style_name}.bin"
   fi
 
   ln -sfn "${lora_path}" "${link_path}"
@@ -124,7 +131,7 @@ update_latest_style_symlink () {
 
 update_latest_style_run_symlink () {
   local run_dir="$1"
-  local link_path="${B4M_ROOT}/outputs/latest_style_run"
+  local link_path="/mnt/cglab/olson/Break-for-make-outputs/latest_style_run"
   ln -sfn "${run_dir}" "${link_path}"
   echo "[symlink] ${link_path} -> ${run_dir}"
 }
@@ -197,4 +204,4 @@ update_latest_style_run_symlink "${OUT_ROOT}"
 echo "All style trainings done."
 echo "Output root: ${OUT_ROOT}"
 echo "Latest symlinks:"
-ls -lah "${B4M_ROOT}/outputs"/latest_style_* "${B4M_ROOT}/outputs"/latest_style_run 2>/dev/null || true
+ls -lah "/mnt/cglab/olson/Break-for-make-outputs"/latest_style_* "/mnt/cglab/olson/Break-for-make-outputs"/latest_style_run 2>/dev/null || true
